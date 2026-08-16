@@ -1,0 +1,27 @@
+# Data and weights -- far too large for git, fetched by scripts/ instead
+checkpoints/
+data/
+*.pth
+*.pkl
+*.bag
+*.mcap
+*.db3
+
+# ROS 2 build artifacts
+build/
+install/
+log/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Results that get regenerated
+eval/results/
+docs/figures/*.png
+!docs/figures/.gitkeep
+
+# OS
+.DS_Store
