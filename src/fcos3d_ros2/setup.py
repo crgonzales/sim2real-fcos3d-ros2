@@ -21,6 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             'detector_node = fcos3d_ros2.detector_node:main',
+            'nuscenes_publisher = fcos3d_ros2.nuscenes_publisher:main',
         ],
     },
 )
