@@ -60,10 +60,16 @@ def main():
     import mmcv
 
     # ---------------------------------------------------------------- inputs
-    imgs = sorted(glob.glob(os.path.join(args.demo_dir, f'*{args.cam}*.jpg')))
+    # Match the camera name EXACTLY, delimited by the '__' separators nuScenes
+    # uses. A loose '*CAM_FRONT*' also matches CAM_FRONT_LEFT/RIGHT (and sorts
+    # them first, since 'L' < '_'), which would silently pair one camera's
+    # image with another camera's intrinsics -- the exact class of frame bug
+    # that produces plausible-looking but wrong detections.
+    imgs = sorted(glob.glob(os.path.join(args.demo_dir, f'*__{args.cam}__*.jpg')))
     if not imgs:
         raise SystemExit(f'No {args.cam} image found in {args.demo_dir}')
     img_path = imgs[0]
+    assert f'__{args.cam}__' in os.path.basename(img_path), 'camera mismatch'
 
     pkls = sorted(glob.glob(os.path.join(args.demo_dir, '*.pkl')))
     if not pkls:
