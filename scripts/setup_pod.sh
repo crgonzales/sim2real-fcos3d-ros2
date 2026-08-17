@@ -56,11 +56,38 @@ apt-get install -y -qq --no-install-recommends \
 # Version bounds come from mmdet3d/__init__.py asserts, NOT the install docs.
 # The docs' `mim install 'mmcv>=2.0.0rc4'` resolves to 2.2.x and fails on import.
 log "Installing OpenMMLab stack (pinned)"
-pip install -q --no-cache-dir "numpy<2.0"
-pip install -q --no-cache-dir mmengine==0.10.4
-pip install -q --no-cache-dir mmcv==2.1.0 \
+
+# CRITICAL: this constraints file is applied to EVERY pip call below, from the
+# very first one. It must never be used as an after-the-fact repair.
+#
+# Why: mmcv 2.1.0's compiled extensions are built against the numpy 1.x ABI.
+# If any transitive dependency installs numpy 2.x first, the fix is NOT to
+# downgrade afterwards -- pip overwrites a compiled package's files without
+# removing the old tree, leaving a mix of both versions that fails in ways that
+# look like unrelated bugs:
+#   numpy   -> two dist-info dirs; pip reports "already satisfied" while the
+#              files on disk are the wrong version
+#   scipy   -> TypeError in interpolate/_fitpack_impl.py (stale .so vs new .py)
+#   mpl     -> ImportError: cannot import name 'mplDeprecation'
+# Recovering from that requires deleting the package directories by hand.
+# Constraining from the start avoids the entire class of problem.
+cat > /tmp/constraints.txt <<'CONSTRAINTS'
+numpy==1.26.4
+scipy==1.13.1
+numba==0.59.1
+llvmlite==0.42.0
+scikit-image==0.22.0
+scikit-learn==1.3.2
+pandas==2.1.4
+matplotlib==3.5.3
+CONSTRAINTS
+PIP="pip install -q --no-cache-dir -c /tmp/constraints.txt"
+
+$PIP -r /tmp/constraints.txt
+$PIP mmengine==0.10.4
+$PIP mmcv==2.1.0 \
     -f https://download.openmmlab.com/mmcv/dist/cu118/torch2.1.0/index.html
-pip install -q --no-cache-dir mmdet==3.3.0
+$PIP mmdet==3.3.0
 
 # mmdet3d is installed WITHOUT its dependency closure, on purpose.
 # Its declared deps pull open3d (~400 MB), which pulls Flask, which tries to
@@ -70,14 +97,22 @@ pip install -q --no-cache-dir mmdet==3.3.0
 # headless pod. mmdet3d itself is a pure-Python wheel, so --no-deps is safe;
 # we then install the deps we actually use, with --ignore-installed blinker so
 # anything that still wants Flask can't trip over the system package.
-pip install -q --no-cache-dir --no-deps mmdet3d==1.4.0
-pip install -q --no-cache-dir --ignore-installed blinker \
-    nuscenes-devkit==1.1.11 pyquaternion psutil pynvml tabulate \
-    numba plyfile scikit-image trimesh networkx
+$PIP --no-deps mmdet3d==1.4.0
 
-# Re-assert the numpy pin last: several of the packages above declare numpy
-# with no upper bound and will happily pull 2.x, which breaks mmcv's ABI.
-pip install -q --no-cache-dir "numpy<2.0"
+# A pip constraints file is used instead of bare pins because the numpy 2.x
+# problem is transitive and cascades. What happened without it:
+#   1. nuscenes-devkit/scikit-image pulled numpy 2.2.6, breaking mmcv's ABI.
+#   2. Downgrading numpy alone then broke scipy, because pip had installed a
+#      scipy wheel compiled against numpy 2.x
+#      ("ValueError: All ufuncs must have type numpy.ufunc" via mmdet's
+#       hungarian_assigner -> scipy.optimize).
+# Constraints apply to the whole transitive closure, so every binary package
+# resolves to a numpy-1.x-compatible build in one pass.
+# --ignore-installed blinker: Ubuntu ships blinker as a distutils project, so
+# pip cannot uninstall it and Flask (via nuscenes-devkit) would hard-fail.
+$PIP --ignore-installed blinker \
+    nuscenes-devkit==1.1.11 pyquaternion psutil tabulate \
+    plyfile trimesh networkx
 
 log "Verifying version matrix"
 python3 - <<'PY'
