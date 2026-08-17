@@ -1,0 +1,53 @@
+{
+  "label": "A40",
+  "timestamp": "2026-08-17T07:26:31.340445+00:00",
+  "precision": "fp16",
+  "device": "cuda:0",
+  "frames": 100,
+  "environment": {
+    "gpu": "NVIDIA A40",
+    "gpu_total_mem_gb": 47.7,
+    "torch": "2.1.0+cu118",
+    "cuda": "11.8",
+    "python": "3.10.12",
+    "platform": "Linux-6.8.0-65-generic-x86_64-with-glibc2.35",
+    "cpu_model": "x86_64"
+  },
+  "latency_ms": {
+    "preprocess_mean": 2.05,
+    "inference_mean": 132.74,
+    "total_mean": 134.79,
+    "total_median": 107.45,
+    "total_p95": 196.52,
+    "total_p99": 202.46,
+    "total_min": 70.56,
+    "total_max": 225.43,
+    "total_stdev": 41.87
+  },
+  "throughput_fps": 7.41,
+  "resources": {
+    "cpu_percent_systemwide": {
+      "mean": 11.53,
+      "max": 26.0,
+      "samples": 125
+    },
+    "process_rss_mb": {
+      "mean": 2015.79,
+      "max": 2015.97,
+      "samples": 125
+    },
+    "gpu_utilization_percent": {
+      "mean": 38.28,
+      "max": 56.0,
+      "samples": 125
+    },
+    "gpu_memory_used_mb": {
+      "mean": 1731.66,
+      "max": 1732.44,
+      "samples": 125
+    },
+    "logical_cpus": 96
+  },
+  "torch_peak_gpu_mem_mb": 575.9,
+  "detections_per_frame_mean": 6.3
+}

@@ -1,0 +1,53 @@
+{
+  "label": "RTX 4090",
+  "timestamp": "2026-08-17T03:37:54.817025+00:00",
+  "precision": "fp32",
+  "device": "cuda:0",
+  "frames": 100,
+  "environment": {
+    "gpu": "NVIDIA GeForce RTX 4090",
+    "gpu_total_mem_gb": 25.3,
+    "torch": "2.1.0+cu118",
+    "cuda": "11.8",
+    "python": "3.10.12",
+    "platform": "Linux-6.8.0-88-generic-x86_64-with-glibc2.35",
+    "cpu_model": "x86_64"
+  },
+  "latency_ms": {
+    "preprocess_mean": 1.84,
+    "inference_mean": 70.22,
+    "total_mean": 72.05,
+    "total_median": 72.54,
+    "total_p95": 97.75,
+    "total_p99": 100.07,
+    "total_min": 45.59,
+    "total_max": 100.35,
+    "total_stdev": 19.5
+  },
+  "throughput_fps": 13.85,
+  "resources": {
+    "cpu_percent_systemwide": {
+      "mean": 26.5,
+      "max": 48.5,
+      "samples": 71
+    },
+    "process_rss_mb": {
+      "mean": 1904.84,
+      "max": 1904.99,
+      "samples": 71
+    },
+    "gpu_utilization_percent": {
+      "mean": 54.69,
+      "max": 69.0,
+      "samples": 71
+    },
+    "gpu_memory_used_mb": {
+      "mean": 2101.67,
+      "max": 2101.67,
+      "samples": 71
+    },
+    "logical_cpus": 96
+  },
+  "torch_peak_gpu_mem_mb": 597.0,
+  "detections_per_frame_mean": 6.28
+}
