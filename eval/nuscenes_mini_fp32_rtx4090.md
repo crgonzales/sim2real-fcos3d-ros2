@@ -55,12 +55,43 @@ is the largest single contributor, consistent with monocular depth being the
 fundamental limitation. Confirmed qualitatively in the smoke test, where a car
 at 41 m was given a 4.35 m width -- extent estimation degrades with range.
 
-**barrier AP 0.000 needs a second look.** Unlike trailer and
-construction_vehicle, barriers are common, and the smoke test detected 7 of
-them confidently with correct dimensions (0.48 x 1.05 x 2.02 m). Zero AP with
-ATE/ASE/AOE all pinned at the 1.0 no-match default means no prediction matched
-any GT barrier within even the 4.0 m threshold. Either mini_val's two scenes
-contain few barriers, or something class-specific is wrong. Open question.
+**The three 0.000 classes have no ground truth at all.** Counting
+annotations across mini_val (scenes 0103 and 0916, 81 samples):
+
+| GT instances | category |
+|-------|----------|
+| 2568 | vehicle.car |
+| 1312 | human.pedestrian.adult |
+|  259 | vehicle.motorcycle |
+|  124 | vehicle.truck |
+|   54 | static_object.bicycle_rack |
+|   52 | vehicle.bicycle |
+|   46 | human.pedestrian.child |
+|   41 | vehicle.bus.rigid |
+|   39 | movable_object.trafficcone |
+|   19 | movable_object.pushable_pullable |
+
+barrier, trailer and construction_vehicle do not appear. The evaluator scores
+an absent class as AP 0.000 with every TP error at the 1.0 no-match default,
+and still averages over all 10 classes. This is exact: the 7 present classes
+sum to 2.943, and 2.943 / 10 = 0.2943, the reported mAP.
+
+So the aggregate comparison is misleading:
+
+| mAP basis | Value |
+|-----------|-------|
+| all 10 classes (as reported) | 0.2943 |
+| **7 classes actually present** | **0.4204** |
+| published, full val (all present) | 0.299 |
+
+Our 0.2943 sitting next to the published 0.299 is a coincidence -- three
+phantom zeros pull our number down to where a full-val number happens to sit.
+What actually validates the pipeline is the per-class results being sensible,
+not the aggregate. On the classes mini_val does contain, FCOS3D beats its
+full-val average, because these two scenes are dominated by cars and
+pedestrians, its strongest categories.
+
+Any report figure quoting mAP on mini_val must state which basis it uses.
 
 ## System metrics (same run)
 
