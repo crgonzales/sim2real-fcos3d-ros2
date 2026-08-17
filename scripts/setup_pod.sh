@@ -108,11 +108,18 @@ $PIP --no-deps mmdet3d==1.4.0
 #       hungarian_assigner -> scipy.optimize).
 # Constraints apply to the whole transitive closure, so every binary package
 # resolves to a numpy-1.x-compatible build in one pass.
+# nvidia-ml-py provides the pynvml module used for GPU utilisation sampling in
+# scripts/profile_system.py (without it those fields come back null).
+# lyft-dataset-sdk is required despite being unrelated to nuScenes:
+# mmdet3d.evaluation imports lyft_eval at module scope, so the whole evaluation
+# package fails to import without it.
 # --ignore-installed blinker: Ubuntu ships blinker as a distutils project, so
 # pip cannot uninstall it and Flask (via nuscenes-devkit) would hard-fail.
 $PIP --ignore-installed blinker \
     nuscenes-devkit==1.1.11 pyquaternion psutil tabulate \
-    plyfile trimesh networkx
+    plyfile trimesh networkx \
+    nvidia-ml-py \
+    lyft-dataset-sdk
 
 log "Verifying version matrix"
 python3 - <<'PY'
