@@ -61,9 +61,23 @@ pip install -q --no-cache-dir mmengine==0.10.4
 pip install -q --no-cache-dir mmcv==2.1.0 \
     -f https://download.openmmlab.com/mmcv/dist/cu118/torch2.1.0/index.html
 pip install -q --no-cache-dir mmdet==3.3.0
-pip install -q --no-cache-dir mmdet3d==1.4.0
-pip install -q --no-cache-dir \
-    nuscenes-devkit==1.1.11 pyquaternion psutil pynvml tabulate
+
+# mmdet3d is installed WITHOUT its dependency closure, on purpose.
+# Its declared deps pull open3d (~400 MB), which pulls Flask, which tries to
+# uninstall Ubuntu's distutils-installed `blinker` and hard-fails with:
+#   "Cannot uninstall 'blinker'. It is a distutils installed project..."
+# open3d is only used for interactive 3D visualization, which we never do on a
+# headless pod. mmdet3d itself is a pure-Python wheel, so --no-deps is safe;
+# we then install the deps we actually use, with --ignore-installed blinker so
+# anything that still wants Flask can't trip over the system package.
+pip install -q --no-cache-dir --no-deps mmdet3d==1.4.0
+pip install -q --no-cache-dir --ignore-installed blinker \
+    nuscenes-devkit==1.1.11 pyquaternion psutil pynvml tabulate \
+    numba plyfile scikit-image trimesh networkx
+
+# Re-assert the numpy pin last: several of the packages above declare numpy
+# with no upper bound and will happily pull 2.x, which breaks mmcv's ABI.
+pip install -q --no-cache-dir "numpy<2.0"
 
 log "Verifying version matrix"
 python3 - <<'PY'
