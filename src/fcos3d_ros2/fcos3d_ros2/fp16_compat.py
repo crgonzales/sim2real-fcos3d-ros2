@@ -27,6 +27,7 @@ is the reference actually called at runtime.
 Contributor: Carlos Gonzales
 """
 
+import numpy as np
 import torch
 
 _PATCHED = False
@@ -45,12 +46,21 @@ def patch_points_img2cam_fp32() -> bool:
 
     original = head_mod.points_img2cam
 
+    def _to_fp32(x):
+        # points_img2cam is wrapped in mmdet3d's @array_converter, so either
+        # argument may arrive as a torch.Tensor or a numpy.ndarray.
+        if isinstance(x, torch.Tensor):
+            return x.float()
+        if isinstance(x, np.ndarray):
+            return x.astype(np.float32)
+        return x
+
     def points_img2cam_fp32(points, cam2img):
         # enabled=False disables autocast for this region, so the inverse runs
         # in true fp32 rather than being re-cast to half by an enclosing
         # autocast context.
         with torch.autocast(device_type='cuda', enabled=False):
-            return original(points.float(), cam2img.float())
+            return original(_to_fp32(points), _to_fp32(cam2img))
 
     head_mod.points_img2cam = points_img2cam_fp32
     _PATCHED = True
