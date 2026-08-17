@@ -177,6 +177,16 @@ def main():
             box_type_3d=box_type_3d, box_mode_3d=box_mode_3d))])
 
     use_amp = args.precision == 'fp16' and cuda
+    if use_amp:
+        # FCOS3D's decode inverts the intrinsics matrix, and linalg.inv has no
+        # half-precision kernel. Keep just that step in fp32.
+        import sys as _sys
+        _sys.path.insert(0, os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+            'src', 'fcos3d_ros2'))
+        from fcos3d_ros2.fp16_compat import patch_points_img2cam_fp32
+        patch_points_img2cam_fp32()
+        print('fp16: patched points_img2cam to fp32')
 
     def infer(data):
         with torch.no_grad():
