@@ -43,7 +43,10 @@ class ResourceSampler(threading.Thread):
     def __init__(self, interval=0.1):
         super().__init__(daemon=True)
         self.interval = interval
-        self._stop = threading.Event()
+        # NB: not self._stop -- that shadows Thread._stop(), which CPython's
+        # threading internals call during join(), giving
+        # 'TypeError: Event object is not callable'.
+        self._stop_evt = threading.Event()
         self.cpu_pct = []
         self.rss_mb = []
         self.gpu_util = []
@@ -65,7 +68,7 @@ class ResourceSampler(threading.Thread):
         psutil.cpu_percent(None)
 
     def run(self):
-        while not self._stop.is_set():
+        while not self._stop_evt.is_set():
             try:
                 # System-wide CPU across all cores, plus this process's share
                 # normalised to a percentage of one core.
@@ -78,10 +81,10 @@ class ResourceSampler(threading.Thread):
                     self.gpu_mem_mb.append(m.used / 1e6)
             except Exception:
                 pass
-            self._stop.wait(self.interval)
+            self._stop_evt.wait(self.interval)
 
     def stop(self):
-        self._stop.set()
+        self._stop_evt.set()
         self.join(timeout=2.0)
 
     def summary(self):
