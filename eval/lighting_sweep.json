@@ -1,0 +1,154 @@
+[
+  {
+    "name": "baseline",
+    "gain": 1.0,
+    "gamma": 1.0,
+    "mAP": 0.2943396592058276,
+    "NDS": 0.3216899448686571,
+    "per_class_ap_2m": {
+      "car": 0.6799,
+      "truck": 0.5218,
+      "trailer": 0.0,
+      "bus": 0.647,
+      "construction_vehicle": 0.0,
+      "bicycle": 0.3321,
+      "motorcycle": 0.4522,
+      "pedestrian": 0.5776,
+      "traffic_cone": 0.7402,
+      "barrier": 0.0
+    }
+  },
+  {
+    "name": "bright +20%",
+    "gain": 1.2,
+    "gamma": 1.0,
+    "mAP": 0.3021897092271165,
+    "NDS": 0.32747598938931655,
+    "per_class_ap_2m": {
+      "car": 0.6834,
+      "truck": 0.5554,
+      "trailer": 0.0,
+      "bus": 0.6374,
+      "construction_vehicle": 0.0,
+      "bicycle": 0.2742,
+      "motorcycle": 0.4395,
+      "pedestrian": 0.5728,
+      "traffic_cone": 0.7647,
+      "barrier": 0.0
+    }
+  },
+  {
+    "name": "dim -20%",
+    "gain": 0.8,
+    "gamma": 1.0,
+    "mAP": 0.28743752403374107,
+    "NDS": 0.3170156046165874,
+    "per_class_ap_2m": {
+      "car": 0.6799,
+      "truck": 0.4642,
+      "trailer": 0.0,
+      "bus": 0.6527,
+      "construction_vehicle": 0.0,
+      "bicycle": 0.3468,
+      "motorcycle": 0.4658,
+      "pedestrian": 0.5753,
+      "traffic_cone": 0.716,
+      "barrier": 0.0
+    }
+  },
+  {
+    "name": "dim -40%",
+    "gain": 0.6,
+    "gamma": 1.0,
+    "mAP": 0.27062955156142576,
+    "NDS": 0.30369585009923133,
+    "per_class_ap_2m": {
+      "car": 0.6482,
+      "truck": 0.4716,
+      "trailer": 0.0,
+      "bus": 0.6653,
+      "construction_vehicle": 0.0,
+      "bicycle": 0.3514,
+      "motorcycle": 0.4385,
+      "pedestrian": 0.55,
+      "traffic_cone": 0.6797,
+      "barrier": 0.0
+    }
+  },
+  {
+    "name": "dusk -60%",
+    "gain": 0.4,
+    "gamma": 1.0,
+    "mAP": 0.19620724973042525,
+    "NDS": 0.25860730157758205,
+    "per_class_ap_2m": {
+      "car": 0.4936,
+      "truck": 0.4338,
+      "trailer": 0.0,
+      "bus": 0.0329,
+      "construction_vehicle": 0.0,
+      "bicycle": 0.2436,
+      "motorcycle": 0.2806,
+      "pedestrian": 0.4767,
+      "traffic_cone": 0.6477,
+      "barrier": 0.0
+    }
+  },
+  {
+    "name": "night -80%",
+    "gain": 0.2,
+    "gamma": 1.0,
+    "mAP": 0.12019328556410062,
+    "NDS": 0.1551727627277118,
+    "per_class_ap_2m": {
+      "car": 0.3774,
+      "truck": 0.2095,
+      "trailer": 0.0,
+      "bus": 0.0073,
+      "construction_vehicle": 0.0,
+      "bicycle": 0.1439,
+      "motorcycle": 0.0,
+      "pedestrian": 0.3576,
+      "traffic_cone": 0.4684,
+      "barrier": 0.0
+    }
+  },
+  {
+    "name": "gamma 1.5",
+    "gain": 1.0,
+    "gamma": 1.5,
+    "mAP": 0.278298050006497,
+    "NDS": 0.3072739204925605,
+    "per_class_ap_2m": {
+      "car": 0.6739,
+      "truck": 0.5307,
+      "trailer": 0.0,
+      "bus": 0.6586,
+      "construction_vehicle": 0.0,
+      "bicycle": 0.3363,
+      "motorcycle": 0.3828,
+      "pedestrian": 0.5965,
+      "traffic_cone": 0.694,
+      "barrier": 0.0
+    }
+  },
+  {
+    "name": "gamma 2.2",
+    "gain": 1.0,
+    "gamma": 2.2,
+    "mAP": 0.2140989663039913,
+    "NDS": 0.2664910185123648,
+    "per_class_ap_2m": {
+      "car": 0.6134,
+      "truck": 0.4242,
+      "trailer": 0.0,
+      "bus": 0.5487,
+      "construction_vehicle": 0.0,
+      "bicycle": 0.203,
+      "motorcycle": 0.1449,
+      "pedestrian": 0.5406,
+      "traffic_cone": 0.6011,
+      "barrier": 0.0
+    }
+  }
+]

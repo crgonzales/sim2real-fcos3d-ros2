@@ -343,7 +343,7 @@ is expected for a single-image method with no stereo or temporal cue.
 
 ## 7. Lighting sweep
 
-*(Results pending — see `eval/lighting_sweep.json`.)*
+Full results: `eval/lighting_sweep.md`.
 
 The proposal's central question was how much a detector's accuracy degrades
 when the input's appearance changes, and which classes suffer. Without Isaac
@@ -360,7 +360,62 @@ truth, model — held fixed.
 
 The transform is deterministic by design. MMDetection's `PhotoMetricDistortion`
 randomises, which would leave the independent variable uncontrolled across
-frames within a sweep point.
+frames within a sweep point. The baseline point (gain 1.0, gamma 1.0)
+reproduces the unperturbed run to four decimals, confirming the transform is a
+true no-op there.
+
+### Results
+
+| Setting | gain | gamma | mAP | NDS | ΔmAP |
+|---------|------|-------|-----|-----|------|
+| bright +20% | 1.20 | 1.0 | 0.3022 | 0.3275 | **+2.7%** |
+| **baseline** | 1.00 | 1.0 | **0.2943** | **0.3217** | — |
+| dim −20% | 0.80 | 1.0 | 0.2874 | 0.3170 | −2.3% |
+| dim −40% | 0.60 | 1.0 | 0.2706 | 0.3037 | −8.1% |
+| dusk −60% | 0.40 | 1.0 | 0.1962 | 0.2586 | **−33.3%** |
+| night −80% | 0.20 | 1.0 | 0.1202 | 0.1552 | **−59.2%** |
+| gamma 1.5 | 1.00 | 1.5 | 0.2783 | 0.3073 | −5.4% |
+| gamma 2.2 | 1.00 | 2.2 | 0.2141 | 0.2665 | −27.3% |
+
+**Degradation is strongly nonlinear.** Mild dimming is nearly free (−20%
+brightness costs 2.3% mAP; −40% costs 8.1%), then the model falls off a cliff:
+−60% costs a third of all accuracy, −80% costs nearly 60%. There is a usable
+operating band down to roughly 0.6x brightness and a collapse beyond it. For
+anyone validating perception in simulation, this says a renderer only needs to
+land *within* that band — matching exposure precisely matters far less than
+avoiding gross underexposure.
+
+**Slightly brighter is slightly better.** +20% improves mAP by 2.7%,
+suggesting nuScenes' native exposure sits marginally below this model's
+optimum — plausibly because its training distribution includes many dusk and
+night scenes.
+
+**Which classes suffer** — the spread at dusk −60% is enormous:
+
+| Class | baseline → dusk −60% | change |
+|-------|---------------------|--------|
+| bus | 0.647 → 0.033 | **−95%** |
+| motorcycle | 0.452 → 0.281 | −38% |
+| car | 0.680 → 0.494 | −27% |
+| bicycle | 0.332 → 0.244 | −27% |
+| truck | 0.522 → 0.434 | −17% |
+| pedestrian | 0.578 → 0.477 | −17% |
+| traffic_cone | 0.740 → 0.648 | **−12%** |
+
+By −80% brightness, motorcycle detection fails completely (AP 0.000) and bus
+is effectively gone (0.007), while traffic cones still score 0.468. A
+plausible explanation is that cones and pedestrians are recognised largely by
+silhouette, which survives loss of contrast, whereas buses are large
+low-texture surfaces whose internal detail washes out. That is a hypothesis
+consistent with the data, not something this experiment establishes.
+
+**Caveats.** `mini_val` is 2 scenes / 81 keyframes, so rare classes have small
+support (41 bus, 52 bicycle instances). The bus collapse is dramatic but rests
+on few samples, and bicycle's apparent *improvement* at −20%/−40% is almost
+certainly noise. A gain/gamma change perturbs photometric response only —
+geometry, texture and sensor noise are untouched — so these results measure
+sensitivity to exposure, and are not themselves a measurement of the
+sim-to-real gap.
 
 ---
 
