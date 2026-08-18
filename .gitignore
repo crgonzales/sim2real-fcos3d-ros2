@@ -27,3 +27,7 @@ docs/figures/*.png
 
 # OS
 .DS_Store
+
+# TRIP codex review state (thread ids, raw event streams)
+.claude/skills/*/state/*
+!.claude/skills/*/state/.gitignore
