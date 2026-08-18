@@ -25,9 +25,10 @@ docs/figures/*.png
 
 # Demo media is committed deliberately (submission artifact), so no *.mp4 rule
 
+# Local dev tooling — never published
+.claude/
+
 # OS
 .DS_Store
 
 # TRIP codex review state (thread ids, raw event streams)
-.claude/skills/*/state/*
-!.claude/skills/*/state/.gitignore
