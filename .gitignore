@@ -23,5 +23,7 @@ eval/results/
 docs/figures/*.png
 !docs/figures/.gitkeep
 
+# Demo media is committed deliberately (submission artifact), so no *.mp4 rule
+
 # OS
 .DS_Store
