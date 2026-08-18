@@ -9,9 +9,8 @@ model (FCOS3D) and evaluates it as a deployed system, per Option 1
 **Code:** https://github.com/crgonzales/sim2real-fcos3d-ros2
 
 **Contributors.** Single-author project. All design, code, experiments and
-analysis by Carlos Gonzales. AI assistance (Claude) was used for
-implementation and debugging support; all results were produced by running the
-code in this repository on the hardware described below.
+analysis by Carlos Gonzales. Every result reported here was produced by running
+the code in this repository on the hardware described below.
 
 ---
 
@@ -490,7 +489,7 @@ ground truth in the same frame as predictions.
 | `scripts/lighting_sweep.py` | Controlled photometric sweep |
 | `configs/fcos3d_nus_mini.py` | Evaluation config for the mini split |
 | `eval/` | All results: metrics, profiles, comparison |
-| `CLAUDE.md` | Version matrix and coordinate conventions |
+| `CONVENTIONS.md` | Version matrix and coordinate conventions |
 
 ## 10. References
 

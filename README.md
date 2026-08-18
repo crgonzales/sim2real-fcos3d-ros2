@@ -167,7 +167,7 @@ unrelated to numpy. See §8.1 of the report.
 | `configs/fcos3d_nus_mini.py` | Evaluation config for the mini split |
 | `docs/PROJECT_REPORT.md` | Full write-up |
 | `eval/` | All results |
-| `CLAUDE.md` | Version matrix and coordinate conventions |
+| `CONVENTIONS.md` | Version matrix and coordinate conventions |
 
 ## Notes
 

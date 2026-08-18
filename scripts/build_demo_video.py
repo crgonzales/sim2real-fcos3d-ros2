@@ -17,10 +17,10 @@ from PIL import Image, ImageDraw, ImageFont
 
 W, H, FPS = 960, 540, 10
 OUT = 'docs/media/cmpe249_demo.mp4'
-SCRATCH = ('/private/tmp/claude-501/-Users-carlosgonzales-schooldev/'
-           '25470368-0ce1-4246-9370-b31030c741fb/scratchpad')
-CLIP_MAIN = f'{SCRATCH}/demo_long.mp4'
-CLIP_ALT = f'{SCRATCH}/demo_dusk.mp4'
+# Footage produced by scripts/render_demo.py. Override with FOOTAGE_DIR.
+FOOTAGE_DIR = os.environ.get('FOOTAGE_DIR', 'docs/media')
+CLIP_MAIN = f'{FOOTAGE_DIR}/demo_footage_40s.mp4'
+CLIP_ALT = f'{FOOTAGE_DIR}/demo_footage_dusk_10s.mp4'
 
 FD = '/System/Library/Fonts/Supplemental/'
 def F(n, s): return ImageFont.truetype(FD + n, s)

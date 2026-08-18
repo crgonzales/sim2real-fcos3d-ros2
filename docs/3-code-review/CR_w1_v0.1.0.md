@@ -13,7 +13,7 @@
 
 **Plan**: no plan — TRIP was adopted mid-project, so this is the audit path
 (`/TRIP-review`) applied retroactively to unplanned work. The project has no
-`docs/ARCHI.md`; `CLAUDE.md` serves the equivalent role (pinned version matrix
+`docs/ARCHI.md`; `CONVENTIONS.md` serves the equivalent role (pinned version matrix
 and coordinate conventions) and was used for the architectural pass.
 
 ---
@@ -128,7 +128,7 @@ copies). Factoring it into the package would remove the drift risk.
 - [ ] 2. Code Quality — passed with caveats. m2 (unused import), m3 (unused
   parameter), s3 (duplicated preprocess block).
 - [x] 3. Architectural Compliance — passed. No `ARCHI.md` exists (TRIP adopted
-  mid-project); reviewed against `CLAUDE.md`'s version matrix and coordinate
+  mid-project); reviewed against `CONVENTIONS.md`'s version matrix and coordinate
   conventions, both of which the code honours — notably `gravity_center` for the
   bottom-centre origin and BGR channel order.
 - [ ] 4. Error Handling — passed with caveats. m4: no guard on the image
