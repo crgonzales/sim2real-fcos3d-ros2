@@ -34,13 +34,14 @@ import json
 import os
 
 import numpy as np
+from mmcv.transforms import BaseTransform
 from mmengine.config import Config
 from mmengine.registry import TRANSFORMS
 from mmengine.runner import Runner
 
 
 @TRANSFORMS.register_module()
-class DeterministicPhotometric:
+class DeterministicPhotometric(BaseTransform):
     """Fixed brightness gain + gamma, applied to the decoded image.
 
     Deliberately deterministic, unlike mmdet's PhotoMetricDistortion which
@@ -50,6 +51,11 @@ class DeterministicPhotometric:
     Applied after loading and before Pack3DDetInputs, so the model's own
     normalisation (caffe BGR means) still runs afterwards exactly as in the
     baseline.
+
+    Must subclass BaseTransform: mmengine's Compose requires a callable, and
+    BaseTransform is what supplies __call__ -> transform(). A bare class with
+    only a transform() method fails with
+    "transform should be a callable object".
     """
 
     def __init__(self, gain: float = 1.0, gamma: float = 1.0):
