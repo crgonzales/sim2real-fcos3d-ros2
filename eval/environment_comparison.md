@@ -22,6 +22,19 @@ uses. Date: 2026-08-17.
 
 ## Results
 
+> **Correction — process RSS is overstated.** The profiler as originally
+> written decoded and cached all 100 benchmark frames before sampling began.
+> At 1600x900 BGR that is ~432 MB of harness memory counted inside the
+> reported RSS, which the deployed node never holds: its ROS subscription is
+> depth-1 and processes one frame at a time. The RSS rows below therefore
+> overstate the node's footprint by roughly that amount; the true figure is
+> nearer 1.47 GB. Every other quantity here -- latency, throughput, GPU
+> utilisation, GPU memory, torch peak allocation, CPU -- is unaffected, since
+> those are measured per-frame or on the device. Found in Codex review
+> (docs/3-code-review/), fixed in `scripts/profile_system.py`; the numbers
+> below have not been re-measured.
+
+
 | | RTX 4090 FP32 | RTX 4090 FP16 | A40 FP32 | A40 FP16 |
 |---|---|---|---|---|
 | Mean latency (ms)     | **72.05** | 74.85 | 144.57 | 134.79 |

@@ -153,8 +153,12 @@ def main():
                         continue
                     if draw_box(canvas, b.corners().T, cam2img, GT_COLOR, 1):
                         n_gt += 1
-            except Exception:
-                pass
+            except Exception as e:  # noqa: BLE001
+                # Never swallow this silently: a failed lookup renders as
+                # "ground truth 0" and produces a plausible but misleading
+                # video in which the detector appears to have nothing to miss.
+                print(f'  WARNING: GT lookup failed for sample_data {tok}: '
+                      f'{type(e).__name__}: {e}', flush=True)
 
         # ---- predictions --------------------------------------------------
         pred = result.pred_instances_3d

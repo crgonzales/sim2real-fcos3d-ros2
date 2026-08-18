@@ -48,10 +48,20 @@ def _cpu_model() -> str:
 
 
 # --------------------------------------------------------------------- sampler
+def cuda_ordinal(device: str) -> int:
+    """'cuda:1' -> 1. Everything else -> 0."""
+    if ':' in device:
+        try:
+            return int(device.split(':', 1)[1])
+        except ValueError:
+            pass
+    return 0
+
+
 class ResourceSampler(threading.Thread):
     """Polls CPU / RAM / GPU on a background thread while inference runs."""
 
-    def __init__(self, interval=0.1):
+    def __init__(self, interval=0.1, gpu_index=0):
         super().__init__(daemon=True)
         self.interval = interval
         # NB: not self._stop -- that shadows Thread._stop(), which CPython's
@@ -70,7 +80,7 @@ class ResourceSampler(threading.Thread):
             import pynvml
             pynvml.nvmlInit()
             self.nvml = pynvml
-            self.handle = pynvml.nvmlDeviceGetHandleByIndex(0)
+            self.handle = pynvml.nvmlDeviceGetHandleByIndex(gpu_index)
         except Exception:
             pass
 
@@ -118,9 +128,15 @@ class ResourceSampler(threading.Thread):
 
 # ----------------------------------------------------------------------- setup
 def collect_frames(dataroot, version, camera, limit):
-    """Real nuScenes frames + their true intrinsics."""
+    """Frame PATHS + intrinsics -- deliberately not decoded images.
+
+    Caching every decoded frame would inflate the reported process RSS by
+    ~432 MB at the default 100 x 1600 x 900 BGR frames, which is an artifact of
+    the benchmark harness and not a property of the deployed node (whose ROS
+    subscription is depth-1 and holds one frame at a time). Decoding happens
+    per frame in the measurement loop instead.
+    """
     from nuscenes.nuscenes import NuScenes
-    import cv2
 
     nusc = NuScenes(version=version, dataroot=dataroot, verbose=False)
     out = []
@@ -130,11 +146,8 @@ def collect_frames(dataroot, version, camera, limit):
             continue
         sd = nusc.get('sample_data', tok)
         cs = nusc.get('calibrated_sensor', sd['calibrated_sensor_token'])
-        path = nusc.get_sample_data_path(tok)
-        img = cv2.imread(path)          # BGR, matching the FCOS3D config
-        if img is None:
-            continue
-        out.append((img, np.array(cs['camera_intrinsic'], dtype=np.float32)))
+        out.append((nusc.get_sample_data_path(tok),
+                    np.array(cs['camera_intrinsic'], dtype=np.float32)))
         if len(out) >= limit:
             break
     return out
@@ -155,11 +168,13 @@ def main():
     ap.add_argument('--out', default=None)
     args = ap.parse_args()
 
+    import cv2
     from mmengine.dataset import Compose, pseudo_collate
     from mmdet3d.apis import init_model
     from mmdet3d.structures import get_box_type
 
     cuda = args.device.startswith('cuda')
+    gpu_idx = cuda_ordinal(args.device)
     label = args.label or (
         torch.cuda.get_device_name(0) if cuda else platform.processor() or 'CPU')
 
@@ -169,7 +184,7 @@ def main():
         args.dataroot, args.version, args.camera, args.frames)
     if not frames:
         raise SystemExit('No frames collected -- check dataroot/version')
-    print(f'frames: {len(frames)}  shape: {frames[0][0].shape}')
+    print(f'frames: {len(frames)} (decoded per-frame, not cached)')
 
     model = init_model(args.config, args.ckpt, device=args.device)
     cfg = model.cfg
@@ -208,20 +223,24 @@ def main():
 
     # ------------------------------------------------------------------ warmup
     for i in range(min(args.warmup, len(frames))):
-        infer(preprocess(*frames[i]))
+        wpath, wk = frames[i]
+        infer(preprocess(cv2.imread(wpath), wk))
     if cuda:
-        torch.cuda.synchronize()
-        torch.cuda.reset_peak_memory_stats()
+        torch.cuda.synchronize(gpu_idx)
+        torch.cuda.reset_peak_memory_stats(gpu_idx)
 
     # ----------------------------------------------------------------- measure
-    sampler = ResourceSampler(interval=0.1)
+    sampler = ResourceSampler(interval=0.1, gpu_index=gpu_idx)
     sampler.start()
 
     lat_pre, lat_inf, lat_total, n_det = [], [], [], []
     t_wall0 = time.perf_counter()
-    for img, cam2img in frames:
+    for img_path, cam2img in frames:
+        # Decode inside the timed region: the ROS node also decodes each frame
+        # (cv_bridge) before preprocessing, so this keeps the measurement
+        # representative rather than pre-warming an in-memory corpus.
         t0 = time.perf_counter()
-        data = preprocess(img, cam2img)
+        data = preprocess(cv2.imread(img_path), cam2img)
         t1 = time.perf_counter()
         result = infer(data)
         if cuda:
@@ -246,9 +265,10 @@ def main():
         'device': args.device,
         'frames': len(frames),
         'environment': {
-            'gpu': torch.cuda.get_device_name(0) if cuda else None,
+            'gpu': torch.cuda.get_device_name(gpu_idx) if cuda else None,
+            'gpu_index': gpu_idx if cuda else None,
             'gpu_total_mem_gb': (
-                round(torch.cuda.get_device_properties(0).total_memory / 1e9, 1)
+                round(torch.cuda.get_device_properties(gpu_idx).total_memory / 1e9, 1)
                 if cuda else None),
             'torch': torch.__version__,
             'cuda': torch.version.cuda if cuda else None,
@@ -273,7 +293,8 @@ def main():
         'throughput_fps': round(len(frames) / wall, 2),
         'resources': sampler.summary(),
         'torch_peak_gpu_mem_mb': (
-            round(torch.cuda.max_memory_allocated() / 1e6, 1) if cuda else None),
+            round(torch.cuda.max_memory_allocated(gpu_idx) / 1e6, 1)
+            if cuda else None),
         'detections_per_frame_mean': round(statistics.mean(n_det), 2),
     }
 

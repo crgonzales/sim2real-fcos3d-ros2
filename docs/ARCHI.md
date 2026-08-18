@@ -212,21 +212,32 @@ flowchart LR
 
 ## Testing Strategy
 
-**Current state: no automated test suite.** `scripts/smoke_test.py` is a manual
-verification script. This is recorded as coverage debt in
-`docs/3-code-review/CR_w1_v0.1.0.md`, not waived.
+**`tests/test_geometry.py` — 20 tests, all passing** (`python3 -m pytest tests/ -q`
+on the GPU host; tests requiring torch/mmdet3d skip cleanly elsewhere).
 
-Invariants that should become regression tests, in priority order:
+Every test guards a convention that fails *silently* — producing plausible
+wrong output rather than an error:
 
-1. yaw→quaternion matches `CameraInstance3DBoxes.corners` (verified manually;
-   guards a silent geometric failure)
-2. `gravity_center` vs bottom-centre origin offset
-3. camera/intrinsics pairing rejects a mismatched camera name
-4. `DeterministicPhotometric` is a no-op at gain 1.0 / gamma 1.0
+| Test group | Guards |
+| --- | --- |
+| yaw→quaternion vs `CameraInstance3DBoxes.corners` (7 angles) | mirrored heading on every published box |
+| negative control (negated yaw must fail) | a test that would pass either way |
+| `gravity_center` vs bottom-centre origin | every box sitting half a height low |
+| `dims` ordering = (width, height, length) | corrupted IoU |
+| delimited camera globs | one camera's image with another's intrinsics |
+| photometric no-op at unity | the sweep baseline ceasing to be a control |
+| config asserts BGR | silent accuracy loss from RGB input |
 
-Functional checks currently standing in for tests: the sweep baseline
-reproduces the unperturbed evaluation to four decimals, and detections/frame
-are identical across GPUs (6.28).
+`scripts/smoke_test.py` remains a manual end-to-end check of the node's
+inference path against real weights, complementing the unit tests.
+
+**Remaining coverage debt**: the ROS callbacks themselves are untested (they
+need a live ROS graph and a GPU; verified manually at 2.016 Hz sustained), and
+`fp16_compat` is exercised only by the FP16 profile runs.
+
+Functional checks standing alongside the suite: the sweep baseline reproduces
+the unperturbed evaluation to four decimals, and detections/frame are identical
+across GPUs (6.28).
 
 ---
 

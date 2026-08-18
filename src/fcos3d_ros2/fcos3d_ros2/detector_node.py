@@ -143,7 +143,16 @@ class Fcos3dDetectorNode(Node):
             # Half precision for the FP32-vs-FP16 comparison. DCNv2 in the
             # FCOS3D backbone is fp16-safe under autocast but not always under
             # a blanket .half(), so we use autocast at inference instead.
-            self.get_logger().info('FP16 enabled via torch.autocast')
+            #
+            # The decode step must be patched back to fp32 or the first frame
+            # dies in points_img2cam with
+            #   RuntimeError: linalg.inv: Low precision dtypes not supported.
+            # Without this the node's fp16 mode is unusable even though the
+            # offline profiler works.
+            from fcos3d_ros2.fp16_compat import patch_points_img2cam_fp32
+            patch_points_img2cam_fp32()
+            self.get_logger().info(
+                'FP16 enabled via torch.autocast (decode patched to fp32)')
 
         cfg = self.model.cfg
         # Drop the file-loading transform; we supply the image in memory.

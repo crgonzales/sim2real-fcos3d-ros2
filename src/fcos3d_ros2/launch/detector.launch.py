@@ -14,16 +14,20 @@ from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
+# Must match where scripts/setup_pod.sh actually clones mmdetection3d
+# (MMDET3D_DIR=/workspace/mmdetection3d). A divergence here makes the default
+# launch fail immediately after the documented bootstrap.
 DEFAULT_CONFIG = (
-    '/opt/mmdetection3d/configs/fcos3d/'
+    '/workspace/mmdetection3d/configs/fcos3d/'
     'fcos3d_r101-caffe-dcn_fpn_head-gn_8xb2-1x_nus-mono3d.py'
 )
+DEFAULT_CKPT = '/workspace/checkpoints/fcos3d_r101_nus.pth'
 
 
 def generate_launch_description():
     args = [
         DeclareLaunchArgument('config_file', default_value=DEFAULT_CONFIG),
-        DeclareLaunchArgument('checkpoint_file', default_value=''),
+        DeclareLaunchArgument('checkpoint_file', default_value=DEFAULT_CKPT),
         DeclareLaunchArgument('device', default_value='cuda:0'),
         DeclareLaunchArgument('fp16', default_value='false'),
         DeclareLaunchArgument('score_threshold', default_value='0.3'),

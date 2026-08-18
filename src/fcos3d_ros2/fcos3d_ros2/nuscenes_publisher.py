@@ -198,10 +198,14 @@ class NuScenesPublisher(Node):
             m.pose.orientation.x = float(q.x)
             m.pose.orientation.y = float(q.y)
             m.pose.orientation.z = float(q.z)
-            # nuScenes Box.wlh -> ROS Vector3 in the same axis order the
-            # detector publishes (x=width, y=height, z=length).
+            # nuScenes Box.wlh unpacks as (width, length, height), but the
+            # box's LOCAL axes -- the frame box.orientation rotates -- are
+            # x=length, y=width, z=height (see Box.corners in the devkit:
+            # x_corners uses l/2, y_corners uses w/2, z_corners uses h/2).
+            # Marker scale is applied in that same local frame, so it must be
+            # (l, w, h). Publishing (w, h, l) permuted every GT box.
             w, l, h = box.wlh
-            m.scale = Vector3(x=float(w), y=float(h), z=float(l))
+            m.scale = Vector3(x=float(l), y=float(w), z=float(h))
             m.color = ColorRGBA(r=0.15, g=1.0, b=0.35, a=0.25)
             m.lifetime.sec = 1
             markers.markers.append(m)

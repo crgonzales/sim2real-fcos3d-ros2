@@ -290,9 +290,18 @@ the same in-memory path the node uses.
 | GPU utilisation (%) | 54.69 | 36.00 | 53.58 | 38.28 |
 | GPU memory (MB) | 2101.7 | 1781.0 | 2051.2 | 1731.7 |
 | torch peak alloc (MB) | 597.0 | 575.9 | 597.0 | 575.9 |
-| Process RSS (MB) | 1904.8 | 1998.8 | 1914.6 | 2015.8 |
+| Process RSS (MB) † | 1904.8 | 1998.8 | 1914.6 | 2015.8 |
 | CPU (%, 96 cores) | 26.50 | 25.41 | 10.41 | 11.53 |
 | Detections / frame | 6.28 | 6.28 | 6.28 | 6.30 |
+
+† **Process RSS is overstated by roughly 432 MB.** The profiler originally
+decoded and cached all 100 benchmark frames before sampling began; at
+1600x900 BGR that is harness memory the deployed node never holds, since its
+ROS subscription is depth-1. The node's true footprint is nearer 1.47 GB.
+Latency, throughput, GPU utilisation, GPU memory, torch peak allocation and CPU
+are unaffected -- those are measured per-frame or on the device. Identified in
+the Codex review pass and fixed in `scripts/profile_system.py`; the table has
+not been re-measured.
 
 Both environments are Runpod secure-cloud pods running the identical container
 image and stack built by the same script, which removes the software stack as a
