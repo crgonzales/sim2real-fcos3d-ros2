@@ -88,6 +88,9 @@ def main():
     ap.add_argument('--score-thr', type=float, default=0.3)
     ap.add_argument('--device', default='cuda:0')
     ap.add_argument('--no-gt', action='store_true')
+    # Far-away GT clutters the frame without adding information; FCOS3D's own
+    # useful range is well inside this anyway (see mATE in the report).
+    ap.add_argument('--gt-max-dist', type=float, default=45.0)
     ap.add_argument('--out', default='/workspace/demo.mp4')
     args = ap.parse_args()
 
@@ -146,6 +149,8 @@ def main():
                 _, boxes, _ = nusc.get_sample_data(
                     tok, box_vis_level=BoxVisibility.ANY)
                 for b in boxes:
+                    if float(b.center[2]) > args.gt_max_dist:
+                        continue
                     if draw_box(canvas, b.corners().T, cam2img, GT_COLOR, 1):
                         n_gt += 1
             except Exception:
@@ -172,6 +177,9 @@ def main():
                 n_det += 1
                 pts, _ = project(corners[i], cam2img)
                 x, y = pts.min(axis=0).astype(int)
+                # Keep the label on-screen: boxes clipped by the left edge
+                # would otherwise have their first characters cut off.
+                x = int(np.clip(x, 6, canvas.shape[1] - 190))
                 label = f'{name} {ss[i]:.2f} {centers[i][2]:.0f}m'
                 cv2.putText(canvas, label, (x, max(y - 6, 14)),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 0, 0), 4,
