@@ -18,8 +18,6 @@ Usage:
 Contributor: Carlos Gonzales
 """
 
-from typing import Optional
-
 import numpy as np
 import rclpy
 from rclpy.node import Node
@@ -50,7 +48,7 @@ class NuScenesPublisher(Node):
         self.declare_parameter('gt_topic', '/nuscenes/gt_markers')
         self.declare_parameter('publish_gt', True)
         # Photometric sweep: emulate lighting change without a simulator.
-        # 1.0 = unmodified. See docs/PLAN.md for why this exists.
+        # 1.0 = unmodified. See eval/lighting_sweep.md for why this exists.
         self.declare_parameter('brightness_gain', 1.0)
         self.declare_parameter('gamma', 1.0)
 
@@ -70,6 +68,10 @@ class NuScenesPublisher(Node):
             verbose=False)
 
         # Flatten every scene's keyframes into one ordered list.
+        # NB: this spans ALL mini scenes, i.e. mini_train and mini_val together.
+        # That is fine for the live demo, which is this node's only purpose --
+        # every reported accuracy figure comes from tools/test.py on mini_val,
+        # not from this path. Do not evaluate through here without splitting.
         self.samples = [s for s in self.nusc.sample]
         if not self.samples:
             raise RuntimeError('No samples found -- check dataroot/version')
@@ -149,13 +151,13 @@ class NuScenesPublisher(Node):
         self.pub_img.publish(msg)
 
         if self.publish_gt:
-            self.pub_gt.publish(self._gt_markers(sample, cam_token, stamp))
+            self.pub_gt.publish(self._gt_markers(cam_token, stamp))
 
         if self.idx % 20 == 0:
             self.get_logger().info(f'published {self.idx}/{len(self.samples)}')
 
     # ----------------------------------------------------------------- ground truth
-    def _gt_markers(self, sample, cam_token, stamp) -> MarkerArray:
+    def _gt_markers(self, cam_token, stamp) -> MarkerArray:
         """GT boxes transformed into the camera frame.
 
         get_sample_data with box_vis_level returns boxes already moved into the

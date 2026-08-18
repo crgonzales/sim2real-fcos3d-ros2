@@ -304,8 +304,10 @@ class Fcos3dDetectorNode(Node):
     def _yaw_to_quat_about_y(yaw: float):
         """Rotation about the camera-frame y axis (which points down).
 
-        Sign convention is the thing to verify visually in RViz2 first --
-        if boxes are consistently mirrored in heading, negate `yaw` here.
+        Sign convention VERIFIED against CameraInstance3DBoxes.corners at
+        yaw in {0, 0.5, pi/2, 2.5, -1.0}: max corner mismatch 0.0000 m as
+        written, versus up to 2.66 m if `yaw` is negated. Do not "fix" the
+        sign here -- see docs/3-code-review/CR_w1_v0.1.0.md (m1).
         """
         half = yaw / 2.0
         return (np.cos(half), 0.0, np.sin(half), 0.0)  # (w, x, y, z)

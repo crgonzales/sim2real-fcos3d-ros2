@@ -36,6 +36,17 @@ import torch
 import psutil
 
 
+def _cpu_model() -> str:
+    try:
+        with open('/proc/cpuinfo') as f:
+            for line in f:
+                if line.startswith('model name'):
+                    return line.split(':', 1)[1].strip()
+    except Exception:
+        pass
+    return platform.processor() or 'unknown'
+
+
 # --------------------------------------------------------------------- sampler
 class ResourceSampler(threading.Thread):
     """Polls CPU / RAM / GPU on a background thread while inference runs."""
@@ -243,7 +254,10 @@ def main():
             'cuda': torch.version.cuda if cuda else None,
             'python': platform.python_version(),
             'platform': platform.platform(),
-            'cpu_model': platform.processor(),
+            # platform.processor() returns a bare 'x86_64' on Linux, which is
+            # useless for controlling a cross-machine comparison. Read the real
+            # model from /proc/cpuinfo -- see CR_w1_v0.1.0.md finding M1.
+            'cpu_model': _cpu_model(),
         },
         'latency_ms': {
             'preprocess_mean': round(statistics.mean(lat_pre), 2),

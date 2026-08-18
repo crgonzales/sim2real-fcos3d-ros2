@@ -7,7 +7,14 @@ Both environments are Runpod secure-cloud pods running the identical container
 image (`runpod/pytorch:2.1.0-py3.10-cuda11.8.0-devel-ubuntu22.04`) and the
 identical software stack, built by `scripts/setup_pod.sh`. Holding the cloud
 tier, OS, driver family, Python, torch and every OpenMMLab version constant
-means the GPU is the only variable.
+removes the software stack as a variable.
+
+**Caveat on attribution.** The host CPU was not controlled. GPU utilisation is
+only ~54%, so roughly 46% of wall time is host-side work (preprocessing, kernel
+launch, box decoding, NMS). The RTX 4090 pod ran an AMD EPYC 7K62; the A40
+pod's CPU was not recorded. The 2.0x figure below is therefore a sound
+measurement of **end-to-end pod performance**, which is what the assignment
+asks for, but it should not be read as a pure GPU benchmark.
 
 Workload: 100 real nuScenes `CAM_FRONT` keyframes at 1600x900, 10 warmup
 frames discarded, measured through the same in-memory path the ROS 2 node
@@ -39,10 +46,11 @@ factor of two on this workload, despite the A40 costing 40% less per hour.
 Per unit of throughput the 4090 is the better value here: $0.053/FPS versus
 $0.064/FPS.
 
-The comparison is well controlled. `torch` peak allocation is byte-identical
-(597.0 MB both) and detections per frame are identical (6.28), so the two
-machines are running the same computation and producing the same results --
-only the speed differs.
+`torch` peak allocation is byte-identical (597.0 MB both) and detections per
+frame are identical (6.28), so both machines run the same computation and
+produce the same results. What differs is end-to-end speed; as noted above, the
+host CPU was not controlled, so the split between GPU and host contribution to
+that 2.0x is not established here.
 
 ### 2. FP16 helps the A40 and hurts the 4090
 

@@ -296,9 +296,15 @@ the same in-memory path the node uses.
 | Detections / frame | 6.28 | 6.28 | 6.28 | 6.30 |
 
 Both environments are Runpod secure-cloud pods running the identical container
-image and stack built by the same script, so the GPU is the only variable.
-`torch` peak allocation is byte-identical (597.0 MB) and detections per frame
-are identical, confirming both machines run the same computation.
+image and stack built by the same script, which removes the software stack as a
+variable. `torch` peak allocation is byte-identical (597.0 MB) and detections
+per frame are identical, confirming both machines run the same computation.
+
+The host CPU was **not** controlled: GPU utilisation is only ~54%, so ~46% of
+wall time is host-side, and while the RTX 4090 pod ran an AMD EPYC 7K62 the A40
+pod's CPU was not recorded. The 2.0x result is therefore a sound measurement of
+end-to-end pod performance -- what the assignment asks for -- but not a pure
+GPU benchmark.
 
 Measured live through the ROS 2 node rather than the offline profiler, the
 node reported 77–95 ms end-to-end and sustained 2.016 Hz against a 2 Hz
