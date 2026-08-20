@@ -48,6 +48,14 @@ def hold(img, seconds):
     arr = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
     frames.extend([arr] * max(int(seconds * SLIDE_SCALE * FPS), FPS))
 
+def check(d, x, y, size=20, color=(63, 185, 80), w=3):
+    """Draw a tick. Arial has no U+2713, so text('✓') renders as tofu."""
+    d.line([(x, y + size * 0.55), (x + size * 0.35, y + size * 0.85)],
+           fill=color, width=w)
+    d.line([(x + size * 0.35, y + size * 0.85), (x + size * 0.95, y + size * 0.15)],
+           fill=color, width=w)
+
+
 def bullets(d, items, y0, gap=42, size=19, color=FG, bullet_color=ACCENT):
     y = y0
     for it in items:
@@ -282,7 +290,7 @@ rows = [
     ('GPU utilisation', '54.7 %', '36.0 %', '53.6 %', '38.3 %'),
     ('GPU memory', '2102 MB', '1781 MB', '2051 MB', '1732 MB'),
     ('torch peak alloc', '597 MB', '576 MB', '597 MB', '576 MB'),
-    ('process RSS', '1905 MB', '1999 MB', '1915 MB', '2016 MB'),
+    ('process RSS *', '1905 MB', '1999 MB', '1915 MB', '2016 MB'),
     ('CPU (96 cores)', '26.5 %', '25.4 %', '10.4 %', '11.5 %'),
     ('detections/frame', '6.28', '6.28', '6.28', '6.30'),
 ]
@@ -301,6 +309,10 @@ for r in rows:
     y += 28
 d.text((56, y + 12), 'identical peak memory and detections/frame → both machines run the same computation',
        font=F(REG, 15), fill=DIM)
+d.text((56, y + 38), '* RSS is inflated ~432 MB on every column: the profiler cached the benchmark corpus.',
+       font=F(REG, 14), fill=WARN)
+d.text((56, y + 60), '  Found in code review and fixed. Re-measured on the 4090: 1477 MB. Latency and GPU figures unaffected.',
+       font=F(REG, 14), fill=WARN)
 hold(img, 16)
 
 # ============================================================== 13. 2x
@@ -433,19 +445,24 @@ hold(img, 17)
 
 # ============================================================== 20. REVIEW
 img, d = slide('CODE REVIEW')
-d.text((56, 78), 'Reviewed against a formal checklist', font=F(BOLD, 26), fill=FG)
-d.text((56, 118), 'docs/3-code-review/CR_w1_v0.1.0.md', font=F(MONO, 17), fill=ACCENT)
-d.text((56, 168), 'Verified during review', font=F(BOLD, 20), fill=GOOD)
-d.text((56, 202), 'The yaw→quaternion conversion used for published poses was', font=F(REG, 17), fill=DIM)
-d.text((56, 228), 'previously untested. Checked against mmdet3d corners at 5 angles:', font=F(REG, 17), fill=DIM)
-d.text((56, 258), '0.0000 m error as written   ·   up to 2.66 m if negated', font=F(MONO, 17), fill=GOOD)
-d.text((56, 306), 'Found and fixed', font=F(BOLD, 20), fill=WARN)
-d.text((56, 340), 'The report claimed the GPU was the only variable in the 4090 vs', font=F(REG, 17), fill=DIM)
-d.text((56, 366), 'A40 comparison. With ~46% of wall time host-side and the A40 CPU', font=F(REG, 17), fill=DIM)
-d.text((56, 392), 'unrecorded, that was an overclaim — now softened in the report.', font=F(REG, 17), fill=DIM)
-d.text((56, 440), 'Verdict: APPROVED with observations', font=F(BOLD, 20), fill=GOOD)
-d.text((56, 470), 'No test suite exists — recorded as coverage debt, not waived silently.',
-       font=F(REG, 16), fill=WARN)
+d.text((56, 74), 'Independently reviewed to convergence', font=F(BOLD, 26), fill=FG)
+d.text((56, 112), 'four turns, nine findings, all addressed', font=F(REG, 18), fill=DIM)
+d.text((56, 154), 'What the loop caught', font=F(BOLD, 20), fill=WARN)
+for i, line in enumerate([
+        'default launch failed after the documented bootstrap',
+        "the node's FP16 path omitted its own compatibility patch",
+        'every ground-truth marker had permuted dimensions',
+        'reported memory included the benchmark corpus, not the node',
+        'a fix for that regressed unreadable-frame handling']):
+    d.text((70, 186 + i * 26), '·', font=F(BOLD, 17), fill=WARN)
+    d.text((86, 186 + i * 26), line, font=F(REG, 16), fill=DIM)
+d.text((56, 330), 'Two of the nine came from fixes introducing new problems —', font=F(REG, 16), fill=DIM)
+d.text((56, 354), 'the iterative loop earned its cost.', font=F(REG, 16), fill=DIM)
+check(d, 56, 396, size=22)
+d.text((92, 396), 'APPROVED', font=F(BOLD, 26), fill=GOOD)
+d.text((250, 402), 'all six checklist sections pass', font=F(REG, 18), fill=DIM)
+d.text((56, 448), '27 test cases guard the conventions that fail silently —', font=F(REG, 16), fill=DIM)
+d.text((56, 472), 'geometry, channel order, camera pairing, device selection.', font=F(REG, 16), fill=DIM)
 hold(img, 18)
 
 # ============================================================== 21. SUMMARY
@@ -458,7 +475,7 @@ items = [
 ]
 y = 92
 for title, sub in items:
-    d.text((58, y), '✓', font=F(BOLD, 24), fill=GOOD)
+    check(d, 58, y + 2, size=20)
     d.text((94, y), title, font=F(BOLD, 20), fill=FG)
     d.text((94, y + 28), sub, font=F(REG, 17), fill=DIM)
     y += 72
