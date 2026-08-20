@@ -189,4 +189,3 @@ def test_fcos3d_config_expects_bgr():
     pre = cfg.model.data_preprocessor
     assert pre.bgr_to_rgb is False, 'model expects BGR input'
     assert pre['mean'][0] == pytest.approx(103.530), 'caffe BGR means'
-
