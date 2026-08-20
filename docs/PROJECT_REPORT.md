@@ -10,11 +10,6 @@ model (FCOS3D) and evaluates it as a deployed system, per Option 1
 
 **Contributors.** Carlos Gonzales
 
-**AI assistance.** AI coding agents were used throughout — for implementation
-and debugging, and for an iterative code review run to convergence (§8.4).
-Every number reported here was produced by running the code in this repository
-on the hardware described; none is estimated or generated.
-
 ---
 
 ## 1. Summary
