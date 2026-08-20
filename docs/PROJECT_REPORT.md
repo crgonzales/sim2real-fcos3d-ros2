@@ -31,6 +31,10 @@ Headline results:
 | RTX 4090 vs A40 | 4090 is **2.0x faster** |
 | FP16 vs FP32 | **+6.8% on A40, -3.9% on RTX 4090** |
 
+Latency figures use the original profiler methodology, kept for a like-for-like
+cross-GPU comparison; §6.2 documents a corrected re-measurement (74.91 ms mean
+on the RTX 4090) and why both are reported.
+
 The two findings I consider most interesting are that the pipeline is *not*
 GPU-compute-bound (utilisation peaks near 54%), which explains why FP16 helps
 the slower card and hurts the faster one; and that the aggregate mAP figure on
@@ -102,7 +106,7 @@ columns to avoid this.
 
 Weights: nuScenes-pretrained, published by MMDetection3D
 (`fcos3d_r101_caffe_fpn_gn-head_dcn_2x8_1x_nus-mono3d`, 220 MB), reported by
-OpenMMLab at mAP 29.9 / NDS 37.3 on the full validation split.
+OpenMMLab at mAP 0.299 / NDS 0.373 on the full validation split.
 
 ---
 
@@ -268,7 +272,7 @@ all ten classes. This is exact: the seven present classes sum to 2.943, and
 | published, full val (all present) | 0.299 |
 
 So the apparent agreement with the published number is a coincidence: three
-phantom zeros pull our figure down to where a full-val figure happens to sit.
+phantom zeros pull the figure down to where a full-val figure happens to sit.
 What actually validates the pipeline is that the per-class values are sensible
 and that mATE, the dominant error term, behaves as monocular depth estimation
 should. NDS suffers more than mAP from the phantom classes because it also
@@ -314,7 +318,7 @@ step:
 | detections / frame | 6.28 | 6.28 (unchanged) |
 
 The A40 could not be re-measured: its pod would not restart (host had no free
-GPUs) and a replacement failed before setup completed. The table below
+GPUs) and a replacement failed before setup completed. The main table above
 therefore reports both GPUs under the original, identical methodology, so the
 cross-environment comparison stays internally valid. Applying the same +2.9 ms
 decode shift to the A40 gives ~147.5 ms, and 147.5 / 74.91 = 1.97 — the
@@ -328,7 +332,7 @@ per frame are identical, confirming both machines run the same computation.
 The host CPU was **not** controlled: GPU utilisation is only ~54%, so ~46% of
 wall time is host-side, and while the RTX 4090 pod ran an AMD EPYC 7K62 the A40
 pod's CPU was not recorded. The 2.0x result is therefore a sound measurement of
-end-to-end pod performance -- what the assignment asks for -- but not a pure
+end-to-end pod performance — what the assignment asks for — but not a pure
 GPU benchmark.
 
 Measured live through the ROS 2 node rather than the offline profiler, the
@@ -545,7 +549,10 @@ than reviewing once.
 | `scripts/prepare_nuscenes.py` | Info-file generation, bypassing lyft/waymo imports |
 | `scripts/lighting_sweep.py` | Controlled photometric sweep |
 | `configs/fcos3d_nus_mini.py` | Evaluation config for the mini split |
-| `eval/` | All results: metrics, profiles, comparison |
+| `tests/` | 27 regression cases guarding the conventions that fail silently |
+| `eval/` | All results: metrics, profiles, comparison, lighting sweep |
+| `docs/3-code-review/` | Review records (§8.4), including the converged final review |
+| `docs/media/cmpe249_demo.mp4` | Demo video (4:39) |
 | `CONVENTIONS.md` | Version matrix and coordinate conventions |
 
 ## 10. References
