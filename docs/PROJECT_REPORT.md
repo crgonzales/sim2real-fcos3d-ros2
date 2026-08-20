@@ -10,6 +10,11 @@ model (FCOS3D) and evaluates it as a deployed system, per Option 1
 
 **Contributors.** Carlos Gonzales
 
+**AI assistance.** AI coding agents were used throughout — for implementation
+and debugging, and for an iterative code review run to convergence (§8.4).
+Every number reported here was produced by running the code in this repository
+on the hardware described; none is estimated or generated.
+
 ---
 
 ## 1. Summary
@@ -295,7 +300,7 @@ the same in-memory path the node uses.
 † **Process RSS in this table is overstated by roughly 432 MB, for both GPUs
 equally.** The profiler originally decoded and cached all 100 benchmark frames
 before sampling; the deployed node never holds that, since its ROS subscription
-is depth-1. Identified in the Codex review pass and fixed.
+is depth-1. Identified in the AI agent review pass and fixed.
 
 Re-measured on the RTX 4090 with the corrected profiler, which also moves the
 image decode inside the timed region so latency matches the node's `cv_bridge`
@@ -498,6 +503,37 @@ ground truth in the same frame as predictions.
 | `Database version not found: v1.0-trainval` | `NuScenesDataset.METAINFO` hardcodes trainval, overriding the pkl's `v1.0-mini` | override `metainfo['version']` in a project config |
 | tar "Exiting with failure status" | archive records uid/gid 1035; container cannot chown | `tar --no-same-owner` |
 | `TypeError: 'Event' object is not callable` | named a thread attribute `_stop`, shadowing `Thread._stop()` | rename to `_stop_evt` |
+
+---
+
+### 8.4 Independent code review
+
+The finished implementation was put through an iterative review by an AI
+review agent, run to convergence over four turns against a formal checklist.
+It surfaced **nine findings — four Major, five Minor** — all of which were
+addressed. Full record: `docs/3-code-review/CR_w1_v0.1.0.md`.
+
+The findings that mattered:
+
+| Finding | Consequence had it shipped |
+|---------|---------------------------|
+| `detector.launch.py` defaulted to `/opt/mmdetection3d` while the bootstrap installs to `/workspace/mmdetection3d` | the documented default launch fails immediately |
+| the node's FP16 path never installed `fp16_compat` | `fp16:=true` dies on `linalg.inv` at the first frame, though the offline profiler worked |
+| GT markers published scale `(w, h, l)` when a nuScenes box's local axes are `(l, w, h)` | every ground-truth marker permuted (visualisation only — the video draws GT via `Box.corners()` and was always correct) |
+| the profiler cached all 100 decoded frames before sampling | **reported RSS overstated by ~432 MB** — see §6.2 |
+
+Two observations worth recording. First, **the fourth finding reached
+published results**: the RSS figure described the benchmark harness rather than
+the deployed node. It is corrected in §6.2 with the original value retained and
+annotated, rather than silently replaced.
+
+Second, **two of the nine findings were caused by fixes for earlier findings** —
+moving the decode into the measurement loop dropped the `None` check that
+guarded unreadable frames, and the first CUDA-ordinal fix left the label and
+the measurement-loop synchronisation still pointing at GPU 0. A single-pass
+review would have produced a codebase with two defects that did not exist
+before it started. That is the argument for iterating to convergence rather
+than reviewing once.
 
 ---
 

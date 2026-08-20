@@ -31,4 +31,4 @@ docs/figures/*.png
 # OS
 .DS_Store
 
-# TRIP codex review state (thread ids, raw event streams)
+# AI review agent state (thread ids, raw event streams)

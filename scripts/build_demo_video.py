@@ -446,7 +446,7 @@ hold(img, 17)
 # ============================================================== 20. REVIEW
 img, d = slide('CODE REVIEW')
 d.text((56, 74), 'Independently reviewed to convergence', font=F(BOLD, 26), fill=FG)
-d.text((56, 112), 'four turns, nine findings, all addressed', font=F(REG, 18), fill=DIM)
+d.text((56, 112), 'AI review agent · four turns · nine findings · all addressed', font=F(REG, 18), fill=DIM)
 d.text((56, 154), 'What the loop caught', font=F(BOLD, 20), fill=WARN)
 for i, line in enumerate([
         'default launch failed after the documented bootstrap',

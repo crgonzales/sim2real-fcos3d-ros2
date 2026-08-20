@@ -2,12 +2,12 @@
 
 **Review Date**: 2026-08-19
 **Version**: 0.1.0
-**Reviewer**: Codex CLI (`gpt-5.6-sol`, xhigh effort) via `codex-code-review`, four turns to convergence
+**Reviewer**: AI review agent, run iteratively to convergence over four turns
 **Files Reviewed**: entire tracked tree — `src/fcos3d_ros2/`, `scripts/`, `configs/`, `tests/`, `docs/`, `eval/`
 **Plan**: no plan — TRIP adopted after implementation, reviewed as unplanned work against `docs/ARCHI.md`
 
 Supersedes `CR_w1_v0.1.0-manual-prepass.md` (the manual pass that preceded the
-Codex loop). Findings from that pass carried forward as `m4`/`m5`.
+AI review loop). Findings from that pass carried forward as `m4`/`m5`.
 
 ---
 
@@ -26,7 +26,7 @@ which were addressed. **APPROVED.**
 20 files / 2684 lines: the ROS 2 package (`detector_node`,
 `nuscenes_publisher`, `fp16_compat`), a reproducible environment bootstrap,
 five analysis scripts, an evaluation config, and 27 test cases. `git diff HEAD`
-was empty throughout (work committed), so Codex read the tree directly.
+was empty throughout (work committed), so the reviewer read the tree directly.
 
 ---
 

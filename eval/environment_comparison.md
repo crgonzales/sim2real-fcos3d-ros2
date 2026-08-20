@@ -28,7 +28,7 @@ uses. Date: 2026-08-17.
 The profiler originally decoded and cached all 100 benchmark frames before
 sampling began. At 1600x900 BGR that is ~432 MB of harness memory counted in
 the reported RSS, which the deployed node never holds (its ROS subscription is
-depth-1). Found in the Codex review pass and fixed: frames are now decoded one
+depth-1). Found in the AI agent review pass and fixed: frames are now decoded one
 at a time *inside* the timed region, which also makes latency include the
 image decode exactly as the node's `cv_bridge` step does.
 
@@ -71,7 +71,7 @@ uses. Date: 2026-08-17.
 > overstate the node's footprint by roughly that amount; the true figure is
 > nearer 1.47 GB. Every other quantity here -- latency, throughput, GPU
 > utilisation, GPU memory, torch peak allocation, CPU -- is unaffected, since
-> those are measured per-frame or on the device. Found in Codex review
+> those are measured per-frame or on the device. Found in AI agent review
 > (docs/3-code-review/), fixed in `scripts/profile_system.py`; the numbers
 > below have not been re-measured.
 
