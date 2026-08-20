@@ -269,6 +269,15 @@ def main():
 
     sampler.stop()
 
+    # Every aggregation below (statistics.mean, np.percentile, min, max) raises
+    # on an empty sequence, so a run in which every frame was unreadable must
+    # fail here with an actionable message rather than deep inside the report
+    # construction.
+    if not lat_total:
+        raise SystemExit(
+            f'No frames could be processed: all {skipped} candidate frames '
+            f'were unreadable. Check --dataroot and that the images exist.')
+
     def pct(xs, p):
         return round(float(np.percentile(xs, p)), 2)
 

@@ -212,8 +212,17 @@ flowchart LR
 
 ## Testing Strategy
 
-**`tests/test_geometry.py` — 20 tests, all passing** (`python3 -m pytest tests/ -q`
-on the GPU host; tests requiring torch/mmdet3d skip cleanly elsewhere).
+**27 test cases across two modules.**
+
+| Module | Cases | Needs the inference stack? | Last run |
+| --- | --- | --- | --- |
+| `tests/test_conventions.py` | 7 | no — runs on any machine | **green** (pytest, laptop) |
+| `tests/test_geometry.py` | 20 | yes — `importorskip('mmdet3d')` | green at last GPU-host run |
+
+The split is deliberate: `test_geometry.py` calls `importorskip` at module
+scope, which skips *every* test in that file when the stack is absent. Keeping
+the device-parsing and static-guard tests in a separate module means they stay
+covered on a laptop, when no GPU pod is available.
 
 Every test guards a convention that fails *silently* — producing plausible
 wrong output rather than an error:
