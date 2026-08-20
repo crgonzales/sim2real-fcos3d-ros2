@@ -8,8 +8,7 @@ model (FCOS3D) and evaluates it as a deployed system, per Option 1
 
 **Code:** https://github.com/crgonzales/sim2real-fcos3d-ros2
 
-**Contributors.** Single-author project. All design, code, experiments and
-analysis by Carlos Gonzales. Every result reported here was produced by running
+**Contributors.** Single-author project. Every result reported here was produced by running
 the code in this repository on the hardware described below.
 
 ---
