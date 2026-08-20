@@ -227,13 +227,16 @@ wrong output rather than an error:
 | delimited camera globs | one camera's image with another's intrinsics |
 | photometric no-op at unity | the sweep baseline ceasing to be a control |
 | config asserts BGR | silent accuracy loss from RGB input |
+| `cuda_ordinal` parsing + a static no-bare-GPU-0 guard | profiling a different card than the model ran on |
 
 `scripts/smoke_test.py` remains a manual end-to-end check of the node's
 inference path against real weights, complementing the unit tests.
 
 **Remaining coverage debt**: the ROS callbacks themselves are untested (they
 need a live ROS graph and a GPU; verified manually at 2.016 Hz sustained), and
-`fp16_compat` is exercised only by the FP16 profile runs.
+`fp16_compat` is exercised only by the FP16 profile runs. The profiler's
+unreadable-frame skip path has no test either — it needs a corrupt file
+fixture and is exercised only incidentally.
 
 Functional checks standing alongside the suite: the sweep baseline reproduces
 the unperturbed evaluation to four decimals, and detections/frame are identical

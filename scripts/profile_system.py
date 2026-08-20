@@ -176,7 +176,7 @@ def main():
     cuda = args.device.startswith('cuda')
     gpu_idx = cuda_ordinal(args.device)
     label = args.label or (
-        torch.cuda.get_device_name(0) if cuda else platform.processor() or 'CPU')
+        torch.cuda.get_device_name(gpu_idx) if cuda else platform.processor() or 'CPU')
 
     print(f'== {label} | {args.precision} | {args.frames} frames ==')
 
@@ -224,7 +224,11 @@ def main():
     # ------------------------------------------------------------------ warmup
     for i in range(min(args.warmup, len(frames))):
         wpath, wk = frames[i]
-        infer(preprocess(cv2.imread(wpath), wk))
+        wimg = cv2.imread(wpath)
+        if wimg is None:
+            print(f'  WARNING: skipping unreadable warmup frame {wpath}')
+            continue
+        infer(preprocess(wimg, wk))
     if cuda:
         torch.cuda.synchronize(gpu_idx)
         torch.cuda.reset_peak_memory_stats(gpu_idx)
@@ -235,16 +239,26 @@ def main():
 
     lat_pre, lat_inf, lat_total, n_det = [], [], [], []
     t_wall0 = time.perf_counter()
+    skipped = 0
     for img_path, cam2img in frames:
         # Decode inside the timed region: the ROS node also decodes each frame
         # (cv_bridge) before preprocessing, so this keeps the measurement
         # representative rather than pre-warming an in-memory corpus.
+        #
+        # cv2.imread returns None for a missing or corrupt file rather than
+        # raising. Skip those explicitly -- feeding None into preprocess would
+        # crash on .shape, and silently counting them would distort throughput.
         t0 = time.perf_counter()
-        data = preprocess(cv2.imread(img_path), cam2img)
+        img = cv2.imread(img_path)
+        if img is None:
+            print(f'  WARNING: skipping unreadable frame {img_path}')
+            skipped += 1
+            continue
+        data = preprocess(img, cam2img)
         t1 = time.perf_counter()
         result = infer(data)
         if cuda:
-            torch.cuda.synchronize()
+            torch.cuda.synchronize(gpu_idx)
         t2 = time.perf_counter()
 
         lat_pre.append((t1 - t0) * 1e3)
@@ -263,7 +277,9 @@ def main():
         'timestamp': datetime.now(timezone.utc).isoformat(),
         'precision': args.precision,
         'device': args.device,
-        'frames': len(frames),
+        'frames': len(lat_total),
+        'frames_requested': len(frames),
+        'frames_skipped_unreadable': skipped,
         'environment': {
             'gpu': torch.cuda.get_device_name(gpu_idx) if cuda else None,
             'gpu_index': gpu_idx if cuda else None,
@@ -290,7 +306,7 @@ def main():
             'total_max': round(max(lat_total), 2),
             'total_stdev': round(statistics.pstdev(lat_total), 2),
         },
-        'throughput_fps': round(len(frames) / wall, 2),
+        'throughput_fps': round(len(lat_total) / wall, 2) if lat_total else None,
         'resources': sampler.summary(),
         'torch_peak_gpu_mem_mb': (
             round(torch.cuda.max_memory_allocated(gpu_idx) / 1e6, 1)
