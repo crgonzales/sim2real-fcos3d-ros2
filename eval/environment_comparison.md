@@ -22,6 +22,47 @@ uses. Date: 2026-08-17.
 
 ## Results
 
+
+### Correction: process RSS, and a methodology change
+
+The profiler originally decoded and cached all 100 benchmark frames before
+sampling began. At 1600x900 BGR that is ~432 MB of harness memory counted in
+the reported RSS, which the deployed node never holds (its ROS subscription is
+depth-1). Found in the Codex review pass and fixed: frames are now decoded one
+at a time *inside* the timed region, which also makes latency include the
+image decode exactly as the node's `cv_bridge` step does.
+
+Re-measured on the RTX 4090 with the corrected profiler:
+
+| Quantity | original | corrected | why it moved |
+|---|---|---|---|
+| Process RSS (MB) | 1904.8 | **1476.8** | cached corpus removed (−428 MB, as predicted) |
+| preprocess (ms) | 1.84 | **6.39** | image decode now inside the measurement |
+| mean latency (ms) | 72.05 | **74.91** | same reason; more representative of the node |
+| p95 latency (ms) | 97.75 | **99.27** | |
+| throughput (FPS) | 13.85 | **13.33** | |
+| GPU utilisation (%) | 54.69 | **50.43** | longer wall time, same GPU work |
+| torch peak alloc (MB) | 597.0 | **597.0** | unchanged, as expected |
+| detections / frame | 6.28 | **6.28** | unchanged, as expected |
+| host CPU | not recorded | **AMD EPYC 7K62 48-Core** | now captured |
+
+FP16 on the same card, corrected: mean 75.39 ms, 13.25 FPS, RSS 1568.0 MB,
+GPU utilisation 32.08%, GPU memory 1781.0 MB.
+
+**The A40 was not re-measured.** Its pod could not be restarted (the host had
+no free GPUs) and a replacement pod failed before setup completed. The main
+table below therefore reports both GPUs under the *original*, identical
+methodology, which keeps the cross-environment comparison internally valid.
+Applying the same ~+2.9 ms decode shift to the A40 gives ~147.5 ms, and
+147.5 / 74.91 = 1.97 — so the headline 2.0x result is unaffected. RSS in that
+table is overstated by ~432 MB for both GPUs equally.
+
+Workload: 100 real nuScenes `CAM_FRONT` keyframes at 1600x900, 10 warmup
+frames discarded, measured through the same in-memory path the ROS 2 node
+uses. Date: 2026-08-17.
+
+## Results
+
 > **Correction — process RSS is overstated.** The profiler as originally
 > written decoded and cached all 100 benchmark frames before sampling began.
 > At 1600x900 BGR that is ~432 MB of harness memory counted inside the

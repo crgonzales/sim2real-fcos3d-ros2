@@ -294,14 +294,31 @@ the same in-memory path the node uses.
 | CPU (%, 96 cores) | 26.50 | 25.41 | 10.41 | 11.53 |
 | Detections / frame | 6.28 | 6.28 | 6.28 | 6.30 |
 
-† **Process RSS is overstated by roughly 432 MB.** The profiler originally
-decoded and cached all 100 benchmark frames before sampling began; at
-1600x900 BGR that is harness memory the deployed node never holds, since its
-ROS subscription is depth-1. The node's true footprint is nearer 1.47 GB.
-Latency, throughput, GPU utilisation, GPU memory, torch peak allocation and CPU
-are unaffected -- those are measured per-frame or on the device. Identified in
-the Codex review pass and fixed in `scripts/profile_system.py`; the table has
-not been re-measured.
+† **Process RSS in this table is overstated by roughly 432 MB, for both GPUs
+equally.** The profiler originally decoded and cached all 100 benchmark frames
+before sampling; the deployed node never holds that, since its ROS subscription
+is depth-1. Identified in the Codex review pass and fixed.
+
+Re-measured on the RTX 4090 with the corrected profiler, which also moves the
+image decode inside the timed region so latency matches the node's `cv_bridge`
+step:
+
+| Quantity | original | corrected |
+|---|---|---|
+| Process RSS (MB) | 1904.8 | **1476.8** |
+| mean latency (ms) | 72.05 | **74.91** |
+| p95 latency (ms) | 97.75 | **99.27** |
+| throughput (FPS) | 13.85 | **13.33** |
+| GPU utilisation (%) | 54.69 | **50.43** |
+| torch peak alloc (MB) | 597.0 | 597.0 (unchanged) |
+| detections / frame | 6.28 | 6.28 (unchanged) |
+
+The A40 could not be re-measured: its pod would not restart (host had no free
+GPUs) and a replacement failed before setup completed. The table below
+therefore reports both GPUs under the original, identical methodology, so the
+cross-environment comparison stays internally valid. Applying the same +2.9 ms
+decode shift to the A40 gives ~147.5 ms, and 147.5 / 74.91 = 1.97 — the
+headline 2.0x result is unaffected.
 
 Both environments are Runpod secure-cloud pods running the identical container
 image and stack built by the same script, which removes the software stack as a

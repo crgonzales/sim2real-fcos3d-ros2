@@ -267,7 +267,15 @@ committed, because they are signed and expire.
 ## Deployment
 
 Runpod GPU pod from the base image above; `setup_pod.sh` reproduces the
-environment in one run (verified on two different machines). Runpod
+environment in one run (verified from scratch on three separate machine
+states: the RTX 4090 pod, the A40 pod, and the 4090 again after a stop/start).
+
+**Stopping a pod wipes everything outside `/workspace`.** The persistent volume
+survives (dataset, checkpoint, repo, `mmdetection3d` clone, info `.pkl` files),
+but the container filesystem is rebuilt from the base image, so ROS 2 Humble
+and every pip package are gone on restart -- `import mmdet3d` fails and
+`/opt/ros/humble/setup.bash` does not exist. Budget a full `setup_pod.sh` run
+(~20 min) after any stop, or keep the pod running if resuming soon. Runpod
 **secure-cloud** pods have no public IP: SSH is via a PTY-only proxy that
 supports neither `scp`/`sftp` nor TCP forwarding, and its HTTP proxy cannot
 carry a WebSocket. Move code with `git`, move files with a temporary
