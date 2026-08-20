@@ -198,8 +198,10 @@ only a handful of tiny matrix operations do not.
 ### 5.3 Environment
 
 The environment is the most fragile part of this project and is fully captured
-in `scripts/setup_pod.sh`, verified by reproducing it from scratch on a second
-machine.
+in `scripts/setup_pod.sh`, verified by reproducing it from scratch on three
+separate machine states: the RTX 4090 pod, the A40 pod, and the 4090 again
+after a stop/start (which rebuilds the container filesystem and destroys
+everything outside the persistent volume).
 
 | Package | Version | Why pinned |
 |---------|---------|------------|
